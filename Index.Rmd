@@ -1,12 +1,8 @@
 ---
-title: "Index"
+title: "index"
 author: "Nicole Williamson"
 date: "2023-02-08"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-[Graphs](Rmd/AnneArundel.html)
+[Anne Arundel County Graphs](Rmd/AnneArundel.html)
