@@ -3,8 +3,8 @@ title: "AnneArundel"
 author: "Nicole Williamson"
 date: "2023-01-23"
 output:
-  word_document: default
   html_document: default
+  word_document: default
   pdf_document: default
 ---
 
@@ -19,6 +19,7 @@ library("dplyr")
 library("readr")
 library("ggplot2")
 library("scales")
+library("ggpubr")
 ```
 
 ```{r, include=FALSE, message=FALSE, warning=FALSE}
@@ -34,9 +35,12 @@ MyMerge       <- function(x, y){
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # read in water usage data
 waterusage <- read.csv("../Data/WaterUsage_AnneArundelCounty_2022.csv") %>% select(permit, year, annual_avg)
+
+#str(waterusage)
+#unique(waterusage$permit)
 ```
 
-# All Permits - no annual total 
+# All Permits, 2000-2022 - No annual total 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 waterusage_2000 <- waterusage %>% filter(year > 1999) 
@@ -57,7 +61,7 @@ ggplot(data = waterusage_2000, aes(x = year, y= annual_avg, color = permit))+
                                 "AA1986G070" = "#ffc107",
                                 "AA1987G069" = "#ff9800",
                                 "AA2005G020" = "#ff5722"))+
-  geom_line(size = .75)+
+  geom_line(size = 1)+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -66,8 +70,8 @@ ggplot(data = waterusage_2000, aes(x = year, y= annual_avg, color = permit))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  #scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
   scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(limits = c(2000, 2022), breaks = seq(2000, 2022, 1))+
  # geom_hline(yintercept = 41000000, color = "black", linetype= "dashed")+
 #  annotate("text", x = 2000, y= 48000000, label = "System cap - 41 million gpd")+
   labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -84,7 +88,7 @@ total_avg_usage <- waterusage %>% group_by(year) %>% summarise_at(vars(annual_av
 total_avg_usage["permit"] <- c("total_annual_avg")
 
 # Join the two datasets 
-waterusage <- Reduce(MyMerge, list(waterusage, total_avg_usage))
+waterusage_total <- Reduce(MyMerge, list(waterusage, total_avg_usage))
 
 
 
@@ -94,10 +98,12 @@ waterusage <- Reduce(MyMerge, list(waterusage, total_avg_usage))
 #max(waterusage$annual_avg)
 ```
 
-# All Permits - with annual total 
+# All Permits, 1979-2022 - with annual use total across all permits (black line) compared to system cap
+## The gray line is the linear projection of water use growth over time, based on **all previous years data**
+### Water use would exceed cap in 2032
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(data = waterusage, aes(x = year, y= annual_avg, color = permit))+
+ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
   scale_color_manual(values = c("AA1953G008" = "#f44336",
                                 "AA1953G108" = "#e81e63",
                                 "AA1953G208" = "#9c27b0",
@@ -116,6 +122,12 @@ ggplot(data = waterusage, aes(x = year, y= annual_avg, color = permit))+
                                 "AA2005G020" = "#ff5722", 
                                 "total_annual_avg" = "black"))+
   geom_line(size = .75)+
+  geom_smooth(data= waterusage_total %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
+  stat_regline_equation(label.x= 1980, label.y= 39000000, color = "black", size = 3)+ #adds regression line
+  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
+  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
+  #xlim(1980, 2035)+
+   scale_x_continuous(limits = c(1979, 2035), breaks = seq(1979, 2035, 2))+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -124,20 +136,118 @@ ggplot(data = waterusage, aes(x = year, y= annual_avg, color = permit))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  #scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
   scale_y_continuous(labels = label_comma())+
   geom_hline(yintercept = 41000000, color = "black", linetype= "dashed")+
-  annotate("text", x = 2000, y= 48000000, label = "System cap - 41 million gpd")+
+  annotate("text", x = 2000, y= 43000000, label = "System cap - 41 million gpd")+
   labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+```
+# All Permits, 1996-2022 - with annual use total across all permits (black line) compared to system cap
+## The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022**
+### Water use would exceed cap in 2032
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+waterusage_total_1996 <- waterusage_total %>% filter(year > 1995)
+
+ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit))+
+  scale_color_manual(values = c("AA1953G008" = "#f44336",
+                                "AA1953G108" = "#e81e63",
+                                "AA1953G208" = "#9c27b0",
+                                "AA1968G006" = "#673ab7",
+                                "AA1969G019" = "#3f51b5",
+                                "AA1972G005" = "#2196f3",
+                                "AA1972G105" = "#03a9f4",
+                                "AA1981G025" = "#00bcd4",
+                                "AA1981G026" = "#009688",
+                                "AA1982G036" = "#4caf50",
+                                "AA1982G037" = "#8bc34a",
+                                "AA1982G039" = "#cddc39",
+                                "AA1982G044" = "#ffeb3b",
+                                "AA1986G070" = "#ffc107",
+                                "AA1987G069" = "#ff9800",
+                                "AA2005G020" = "#ff5722", 
+                                "total_annual_avg" = "black"))+
+  geom_line(size = .75)+
+  geom_smooth(data=waterusage_total_1996 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
+  stat_regline_equation(label.x= 1996, label.y= 39000000, color = "black", size = 3)+ #adds regression line
+  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
+  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
+  #xlim(1980, 2035)+
+   scale_x_continuous(limits = c(1996, 2034), breaks = seq(1996, 2034, 2))+
+  theme_light()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.line = element_line(colour = "black", linetype = "solid"), 
+        legend.position="none",
+        plot.title = element_text(hjust = .5))+
+  scale_y_continuous(labels = label_comma())+
+  geom_hline(yintercept = 41000000, color = "black", linetype= "dashed")+
+  annotate("text", x = 2012, y= 43000000, label = "System cap - 41 million gpd")+
+  labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
+  guides(color=guide_legend(" "))+
+  theme(legend.position="bottom")
+
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+```
+# All Permits, 2010-2022 - with annual use total across all permits (black line) compared to system cap
+## The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022**
+### Water use would exceed cap in late 2028 or early 2029
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+waterusage_total_2010 <- waterusage_total %>% filter(year > 2009)
+
+ggplot(data = waterusage_total_2010, aes(x = year, y= annual_avg, color = permit))+
+  scale_color_manual(values = c("AA1953G008" = "#f44336",
+                                "AA1953G108" = "#e81e63",
+                                "AA1953G208" = "#9c27b0",
+                                "AA1968G006" = "#673ab7",
+                                "AA1969G019" = "#3f51b5",
+                                "AA1972G005" = "#2196f3",
+                                "AA1972G105" = "#03a9f4",
+                                "AA1981G025" = "#00bcd4",
+                                "AA1981G026" = "#009688",
+                                "AA1982G036" = "#4caf50",
+                                "AA1982G037" = "#8bc34a",
+                                "AA1982G039" = "#cddc39",
+                                "AA1982G044" = "#ffeb3b",
+                                "AA1986G070" = "#ffc107",
+                                "AA1987G069" = "#ff9800",
+                                "AA2005G020" = "#ff5722", 
+                                "total_annual_avg" = "black"))+
+  geom_line(size = .75)+
+  geom_smooth(data=waterusage_total_2010 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
+  stat_regline_equation(label.x= 2010, label.y= 39000000, color = "black", size = 3)+ #adds regression line
+  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
+  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
+  #xlim(1980, 2035)+
+   scale_x_continuous(limits = c(2010, 2030), breaks = seq(2010, 2030, 1))+
+  theme_light()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.line = element_line(colour = "black", linetype = "solid"), 
+        legend.position="none",
+        plot.title = element_text(hjust = .5))+
+  scale_y_continuous(labels = label_comma())+
+  geom_hline(yintercept = 41000000, color = "black", linetype= "dashed")+
+  annotate("text", x = 2020, y= 43000000, label = "System cap - 41 million gpd")+
+  labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
+  guides(color=guide_legend(" "))+
+  theme(legend.position="bottom")
+
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
 ```
 
-### Transform data from long to wide
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+### Transform data from long to wide
 wide_water <- waterusage %>% pivot_wider(names_from = "permit", values_from = annual_avg)
 ```
 
@@ -155,7 +265,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1953G008))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 7000000, color = "#f44336", linetype= "dashed")+
   annotate("text", x = 1988, y= 7200000, label = "Permitted annual average - 7,000,000 gpd", color = "#f44336")+
   labs(title = "AA1953G008 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -177,7 +288,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1953G108))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+ scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 450000, color = "#e81e63", linetype= "dashed")+
   annotate("text", x = 1988, y= 470000, label = "Permitted annual average - 450,000 gpd", color = "#e81e63")+
   labs(title = "AA1953G108 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -199,8 +311,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1953G208))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
-  #scale_y_continuous(breaks = c(0, 1000, 2000, 3000, 4000))+
+ scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 1600000, color = "#9c27b0", linetype= "dashed")+
   annotate("text", x = 1988, y= 1650000, label = "Permitted annual average - 1,600,000 gpd", color = "#9c27b0")+
   labs(title = "AA1953G208 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -222,7 +334,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1968G006))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 1400000, color = "#673ab7", linetype= "dashed")+
   annotate("text", x = 1984, y= 1450000, label = "Permitted annual average", color = "#673ab7")+
   annotate("text", x = 1984, y= 1350000, label = "1,400,000 gpd", color = "#673ab7")+
@@ -245,7 +358,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1969G019))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 4800000, color = "#3f51b5", linetype= "dashed")+
   annotate("text", x = 2000, y= 5200000, label = "Permitted annual average - 4,800,000 gpd", color = "#3f51b5")+
   labs(title = "AA1969G019 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -267,7 +381,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1972G005))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 8000000, color = "#2196f3", linetype= "dashed")+
   annotate("text", x = 1988, y= 8200000, label = "Permitted annual average - 8,000,000 gpd", color = "#2196f3")+
   labs(title = "AA1972G005 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -289,7 +404,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1972G105))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 6800000, color = "#03a9f4", linetype= "dashed")+
   annotate("text", x = 1988, y= 7000000, label = "Permitted annual average - 6,800,000 gpd", color = "#03a9f4")+
   labs(title = "AA1972G105 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -311,7 +427,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1981G025))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 830000, color = "#00bcd4", linetype= "dashed")+
   annotate("text", x = 1988, y= 850000, label = "Permitted annual average - 830,000 gpd", color = "#00bcd4")+
   labs(title = "AA1981G025 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -333,7 +450,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1981G026))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 1000000, color = "#009688", linetype= "dashed")+
   annotate("text", x = 1988, y= 1030000, label = "Permitted annual average - 1,000,000 gpd", color = "#009688")+
   labs(title = "AA1981G026 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -355,7 +473,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1982G036))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 3500000, color = "#4caf50", linetype= "dashed")+
    annotate("text", x = 1988, y= 3600000, label = "Permitted annual average - 3,500,000 gpd", color = "#4caf50")+
   labs(title = "AA1982G036 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -377,7 +496,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1982G037))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 2200000, color = "#8bc34a", linetype= "dashed")+
   annotate("text", x = 1988, y= 2280000, label = "Permitted annual average - 2,200,000 gpd", color = "#8bc34a")+
   labs(title = "AA1982G037 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -399,7 +519,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1982G039))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 860000, color = "#cddc39", linetype= "dashed")+
   annotate("text", x = 1988, y= 885000, label = "Permitted annual average - 860,000 gpd", color = "#cddc39")+
   labs(title = "AA1982G039 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -421,7 +542,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1982G044))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 900000, color = "#ffeb3b", linetype= "dashed", size = 1)+
   annotate("text", x = 1988, y= 925000, label = "Permitted annual average - 900,000 gpd", color = "light grey")+
   labs(title = "AA1982G044 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -443,7 +565,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1986G070))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 3600000, color = "#ffc107", linetype= "dashed")+
   annotate("text", x = 1988, y= 3700000, label = "Permitted annual average - 3,600,000 gpd", color = "#ffc107")+
   labs(title = "AA1986G070 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -465,7 +588,8 @@ ggplot(data = wide_water, aes(x = year, y= AA1987G069))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 8000000, color = "#ff9800", linetype= "dashed")+
   annotate("text", x = 1988, y= 8250000, label = "Permitted annual average - 8,000,000 gpd", color = "#ff9800")+
   labs(title = "AA1987G069 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -487,7 +611,8 @@ ggplot(data = wide_water, aes(x = year, y= AA2005G020))+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
  geom_hline(yintercept = 4500000, color = "#ff5722", linetype= "dashed")+
   annotate("text", x = 1988, y= 4600000, label = "Permitted annual average - 4,500,000 gpd", color = "#ff5722")+
   labs(title = "AA2005G020 - Water Usage", y = "Annual Average Water Ussage (gpd)", x = "Year")+
@@ -529,7 +654,8 @@ geom_line(data = subset(AA1953G008_sup, permit == "AA1953G108"), size = .75)+
         axis.line = element_line(colour = "black", linetype = "solid"), 
         legend.position="none",
         plot.title = element_text(hjust = .5))+
-  scale_x_continuous(breaks = c(1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025))+
+  scale_y_continuous(labels = label_comma())+
+  scale_x_continuous(breaks = seq(1979, 2022, 2))+
   geom_hline(yintercept = 9050000, color = "black", linetype= "dashed")+
   annotate("text", x = 2000, y= 9400000, label = "System cap - 9.05 million gpd")+
   labs(title = "Supplemental permit conditions - AA1953G008/AA1953G108/AA1953G208", y = "Annual Average Water Ussage (gpd)", x = "Year")+
