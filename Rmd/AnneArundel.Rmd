@@ -3,6 +3,7 @@ title: "AnneArundel"
 author: "Nicole Williamson"
 date: "2023-01-23"
 output:
+  word_document: default
   html_document: default
   pdf_document: default
 ---
