@@ -40,7 +40,7 @@ waterusage <- read.csv("../Data/WaterUsage_AnneArundelCounty_2022.csv") %>% sele
 #unique(waterusage$permit)
 ```
 
-# All Permits, 2000-2022 - No annual total 
+# **All Permits, 2000-2022 - no annual total** 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 waterusage_2000 <- waterusage %>% filter(year > 1999) 
@@ -98,9 +98,8 @@ waterusage_total <- Reduce(MyMerge, list(waterusage, total_avg_usage))
 #max(waterusage$annual_avg)
 ```
 
-# All Permits, 1979-2022 - with annual use total across all permits (black line) compared to system cap
-## The gray line is the linear projection of water use growth over time, based on **all previous years data**
-### Water use would exceed cap in 2032
+# **All Permits, 1979-2022 - with annual use total** 
+   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on **all previous years data.** Water use would exceed cap in 2032.
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
@@ -145,9 +144,9 @@ ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
 
 #ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
 ```
-# All Permits, 1996-2022 - with annual use total across all permits (black line) compared to system cap
-## The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022**
-### Water use would exceed cap in 2032
+
+# **All Permits, 1996-2022 - with annual use total** 
+   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022.** Water use would exceed cap in 2032.
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 waterusage_total_1996 <- waterusage_total %>% filter(year > 1995)
@@ -194,9 +193,9 @@ ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit
 
 #ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
 ```
-# All Permits, 2010-2022 - with annual use total across all permits (black line) compared to system cap
-## The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022**
-### Water use would exceed cap in late 2028 or early 2029
+
+# **All Permits, 2010-2022 - with annual use total** 
+   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022.** Water use would exceed cap in 2029.
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 waterusage_total_2010 <- waterusage_total %>% filter(year > 2009)
@@ -245,13 +244,12 @@ ggplot(data = waterusage_total_2010, aes(x = year, y= annual_avg, color = permit
 ```
 
 
-
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ### Transform data from long to wide
 wide_water <- waterusage %>% pivot_wider(names_from = "permit", values_from = annual_avg)
 ```
 
-# Individual Permit Water Usage 
+# **Individual Permit Water Usage** 
 
 ## AA1953G008
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
