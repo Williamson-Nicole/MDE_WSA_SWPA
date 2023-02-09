@@ -20,6 +20,13 @@ library("readr")
 library("ggplot2")
 library("scales")
 library("ggpubr")
+library("ggpmisc")
+```
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+# Note to self!!! To change sigfigs in ggplot stat_regline_equations you need to edit the function in the package 
+
+# type :  "trace(ggpubr:::.stat_lm, edit = TRUE)" into the CONSOLE and edit line 13-14 to be whatever sig fig number you want
 ```
 
 ```{r, include=FALSE, message=FALSE, warning=FALSE}
@@ -40,8 +47,10 @@ waterusage <- read.csv("../Data/WaterUsage_AnneArundelCounty_2022.csv") %>% sele
 #unique(waterusage$permit)
 ```
 
-# **All Permits, 2000-2022** 
-   Still need to figure out a better way to distinguish the colors
+# **All Permits, 2000-2022**
+
+Still need to figure out a better way to distinguish the colors
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 waterusage_2000 <- waterusage %>% filter(year > 1999) 
@@ -79,9 +88,8 @@ ggplot(data = waterusage_2000, aes(x = year, y= annual_avg, color = permit))+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-ggsave("../Figures/AnneArundelCounty_WaterUsage.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage.jpeg")
 ```
-
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # get total avg usage across all permits for each year 
@@ -91,7 +99,7 @@ total_avg_usage["permit"] <- c("total_annual_avg")
 # Join the two datasets 
 waterusage_total <- Reduce(MyMerge, list(waterusage, total_avg_usage))
 
-
+write.csv(waterusage_total, file = "../Data/waterusage_total.csv")
 
 #check for errors in naming convention 
 #unique(waterusage$permit)
@@ -99,9 +107,11 @@ waterusage_total <- Reduce(MyMerge, list(waterusage, total_avg_usage))
 #max(waterusage$annual_avg)
 ```
 
-# **All Permits, 1979-2022 - with annual use total** 
-   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on **all previous years data.** Water use would exceed cap in 2032.
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# **All Permits, 1979-2022 - with annual use total**
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on **all previous years data.** Water use would exceed cap in 2032.
+
+```{r, include=FALSE}
 
 ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
   scale_color_manual(values = c("AA1953G008" = "#f44336",
@@ -122,11 +132,9 @@ ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
                                 "AA2005G020" = "#ff5722", 
                                 "total_annual_avg" = "black"))+
   geom_line(size = .75)+
-  geom_smooth(data= waterusage_total %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
-  stat_regline_equation(label.x= 1980, label.y= 39000000, color = "black", size = 3)+ #adds regression line
-  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
-  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
-  #xlim(1980, 2035)+
+  geom_smooth(data= waterusage_total %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "lightgrey"))+
+  stat_regline_equation(data= waterusage_total %>% filter(permit == "total_annual_avg"), label.x= 1980, label.y= 39000000, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= waterusage_total %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=1980, label.y=37000000, color = "black", size = 3)+ #adds R2 
    scale_x_continuous(limits = c(1979, 2035), breaks = seq(1979, 2035, 2))+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
@@ -143,12 +151,22 @@ ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap1.jpeg")
 ```
 
-# **All Permits, 1996-2022 - with annual use total** 
-   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022.** Water use would exceed cap in 2032.
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+![](images/AnneArundelCounty_WaterUsage_SystemCap1-01.jpeg)
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+# Note to self!!! To change sigfigs in ggplot stat_regline_equations you need to edit the function in the package 
+
+# type :  "trace(ggpubr:::.stat_lm, edit = TRUE)" into the CONSOLE and edit line 13-14 to be whatever sig fig number you want
+```
+
+# **All Permits, 1996-2022 - with annual use total**
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022.** Water use would exceed cap in 2032.
+
+```{r, include=FALSE}
 
 waterusage_total_1996 <- waterusage_total %>% filter(year > 1995)
 
@@ -171,11 +189,11 @@ ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit
                                 "AA2005G020" = "#ff5722", 
                                 "total_annual_avg" = "black"))+
   geom_line(size = .75)+
-  geom_smooth(data=waterusage_total_1996 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
-  stat_regline_equation(label.x= 1996, label.y= 39000000, color = "black", size = 3)+ #adds regression line
-  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
-  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
-  #xlim(1980, 2035)+
+  
+  geom_smooth(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "lightgrey"))+
+  stat_regline_equation(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), label.x= 1996, label.y= 39000000, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=1996, label.y=37000000, color = "black", size = 3)+ #adds R2
+  
    scale_x_continuous(limits = c(1996, 2035), breaks = seq(1996, 2035, 2))+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
@@ -192,12 +210,16 @@ ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap2.jpeg")
 ```
 
-# **All Permits, 2010-2022 - with annual use total** 
-   Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022.** Water use would exceed cap in 2029.
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+![](images/AnneArundelCounty_WaterUsage_SystemCap2.jpeg)
+
+# **All Permits, 2010-2022 - with annual use total**
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022.** Water use would exceed cap in 2029.
+
+```{r, include=FALSE}
 
 waterusage_total_2010 <- waterusage_total %>% filter(year > 2009)
 
@@ -220,11 +242,11 @@ ggplot(data = waterusage_total_2010, aes(x = year, y= annual_avg, color = permit
                                 "AA2005G020" = "#ff5722", 
                                 "total_annual_avg" = "black"))+
   geom_line(size = .75)+
-  geom_smooth(data=waterusage_total_2010 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "gray"))+
-  stat_regline_equation(label.x= 2010, label.y= 39000000, color = "black", size = 3)+ #adds regression line
-  #stat_cor(aes(label=..rr.label..), label.x=0.4, label.y=.25, color = "black", size = 3)+ #adds R2 
-  #stat_cor(method = "pearson", label.x = 1988, label.y = 39000000, color = "black", size = 3)+ #adds p-value 
-  #xlim(1980, 2035)+
+  
+   geom_smooth(data= waterusage_total_2010 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "lightgrey"))+
+  stat_regline_equation(data= waterusage_total_2010 %>% filter(permit == "total_annual_avg"), label.x= 2010, label.y= 39000000, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= waterusage_total_2010 %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=2010, label.y=37000000, color = "black", size = 3)+ #adds R2
+  
    scale_x_continuous(limits = c(2010, 2035), breaks = seq(2010, 2035, 2))+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
@@ -241,18 +263,20 @@ ggplot(data = waterusage_total_2010, aes(x = year, y= annual_avg, color = permit
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap3.jpeg")
 ```
 
+![](images/AnneArundelCounty_WaterUsage_SystemCap3.jpeg)
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ### Transform data from long to wide
 wide_water <- waterusage %>% pivot_wider(names_from = "permit", values_from = annual_avg)
 ```
 
-# **Individual Permit Water Usage** 
+# **Individual Permit Water Usage**
 
 ## AA1953G008
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1953G008))+
   geom_line(size = .75, color = "#f44336")+
@@ -276,6 +300,7 @@ ggsave("../Figures/AA1953G008_WaterUsage.jpeg")
 ```
 
 ## AA1953G108
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1953G108))+
   geom_line(size = .75, color = "#e81e63")+
@@ -299,6 +324,7 @@ ggsave("../Figures/AA1953G108_WaterUsage.jpeg")
 ```
 
 ## AA1953G208
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1953G208))+
   geom_line(size = .75, color = "#9c27b0")+
@@ -322,6 +348,7 @@ ggsave("../Figures/AA1953G208_WaterUsage.jpeg")
 ```
 
 ## AA1968G006
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1968G006))+
   geom_line(size = .75, color = "#673ab7")+
@@ -346,6 +373,7 @@ ggsave("../Figures/AA1968G006_WaterUsage.jpeg")
 ```
 
 ## AA1969G019
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1969G019))+
   geom_line(size = .75, color = "#3f51b5")+
@@ -369,6 +397,7 @@ ggsave("../Figures/AA1969G019_WaterUsage.jpeg")
 ```
 
 ## AA1972G005
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1972G005))+
   geom_line(size = .75, color = "#2196f3")+
@@ -392,6 +421,7 @@ ggsave("../Figures/AA1972G005_WaterUsage.jpeg")
 ```
 
 ## AA1972G105
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1972G105))+
   geom_line(size = .75, color = "#03a9f4")+
@@ -415,6 +445,7 @@ ggsave("../Figures/AA1972G105_WaterUsage.jpeg")
 ```
 
 ## AA1981G025
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1981G025))+
   geom_line(size = .75, color = "#00bcd4")+
@@ -438,6 +469,7 @@ ggsave("../Figures/AA1981G025_WaterUsage.jpeg")
 ```
 
 ## AA1981G026
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1981G026))+
   geom_line(size = .75, color = "#009688")+
@@ -461,6 +493,7 @@ ggsave("../Figures/AA1981G026_WaterUsage.jpeg")
 ```
 
 ## AA1982G036
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1982G036))+
   geom_line(size = .75, color = "#4caf50")+
@@ -484,6 +517,7 @@ ggsave("../Figures/AA1982G036_WaterUsage.jpeg")
 ```
 
 ## AA1982G037
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1982G037))+
   geom_line(size = .75, color = "#8bc34a")+
@@ -507,6 +541,7 @@ ggsave("../Figures/AA1982G037_WaterUsage.jpeg")
 ```
 
 ## AA1982G039
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1982G039))+
   geom_line(size = .75, color = "#cddc39")+
@@ -530,6 +565,7 @@ ggsave("../Figures/AA1982G039_WaterUsage.jpeg")
 ```
 
 ## AA1982G044
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1982G044))+
   geom_line(size = 1, color = "#ffeb3b")+
@@ -553,6 +589,7 @@ ggsave("../Figures/AA1982G044_WaterUsage.jpeg")
 ```
 
 ## AA1986G070
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1986G070))+
   geom_line(size = .75, color = "#ffc107")+
@@ -576,6 +613,7 @@ ggsave("../Figures/AA1986G070_WaterUsage.jpeg")
 ```
 
 ## AA1987G069
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA1987G069))+
   geom_line(size = .75, color = "#ff9800")+
@@ -599,6 +637,7 @@ ggsave("../Figures/AA1987G069_WaterUsage.jpeg")
 ```
 
 ## AA2005G020
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = wide_water, aes(x = year, y= AA2005G020))+
   geom_line(size = .75, color = "#ff5722")+
@@ -622,7 +661,9 @@ ggsave("../Figures/AA2005G020_WaterUsage.jpeg")
 ```
 
 # Supplemental permit conditions
+
 ## AA1953G008 + AA1953G108 + AA1953G208
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 AA1953G008_sup <- wide_water %>% select(AA1953G008, AA1953G108, AA1953G208, year) %>% pivot_longer(!year, names_to = "permit", values_to = "annual_avg")
 
@@ -663,5 +704,3 @@ geom_line(data = subset(AA1953G008_sup, permit == "AA1953G108"), size = .75)+
 
 ggsave("../Figures/AA1953G008_sup_WaterUsage.jpeg")
 ```
-
-
