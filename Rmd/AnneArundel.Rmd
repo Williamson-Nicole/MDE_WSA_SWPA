@@ -3,9 +3,16 @@ title: "AnneArundel"
 author: "Nicole Williamson"
 date: "2023-01-23"
 output:
-  html_document: default
-  word_document: default
-  pdf_document: default
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE, message=FALSE, message=FALSE, warning=FALSE}
@@ -48,8 +55,6 @@ waterusage <- read.csv("../Data/WaterUsage_AnneArundelCounty_2022.csv") %>% sele
 ```
 
 # **All Permits, 2000-2022**
-
-Still need to figure out a better way to distinguish the colors
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -107,9 +112,15 @@ write.csv(waterusage_total, file = "../Data/waterusage_total.csv")
 #max(waterusage$annual_avg)
 ```
 
-# **All Permits, 1979-2022 - with annual use total**
+# **Model 1**
 
-Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on **all previous years data.** Water use would exceed cap in 2032.
+## 1979-2022 - All available data
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on **all previous years data.**
+
+-   Water use would exceed cap on Friday August 6, 2032
+
+-   Projected water use in 2035 is 42,309,005 GPD
 
 ```{r, include=FALSE}
 
@@ -162,15 +173,21 @@ ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
 # type :  "trace(ggpubr:::.stat_lm, edit = TRUE)" into the CONSOLE and edit line 13-14 to be whatever sig fig number you want
 ```
 
-# **All Permits, 1996-2022 - with annual use total**
+# **Model 2**
 
-Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1996 - 2022.** Water use would exceed cap in 2032.
+## 1998-2022 - Previous two permit periods
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last two permit periods **from 1998 - 2022.**
+
+-   Water use would exceed cap on Tuesday August 12, 2031
+
+-   Projected water use in 2032 is 42,925,001 GPD
 
 ```{r, include=FALSE}
 
-waterusage_total_1996 <- waterusage_total %>% filter(year > 1995)
+waterusage_total_1998 <- waterusage_total %>% filter(year > 1997)
 
-ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit))+
+ggplot(data = waterusage_total_1998, aes(x = year, y= annual_avg, color = permit))+
   scale_color_manual(values = c("AA1953G008" = "#f44336",
                                 "AA1953G108" = "#e81e63",
                                 "AA1953G208" = "#9c27b0",
@@ -190,11 +207,11 @@ ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit
                                 "total_annual_avg" = "black"))+
   geom_line(size = .75)+
   
-  geom_smooth(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "lightgrey"))+
-  stat_regline_equation(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), label.x= 1996, label.y= 39000000, color = "black", size = 3)+ #adds regression line formual 
-  stat_cor(data= waterusage_total_1996 %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=1996, label.y=37000000, color = "black", size = 3)+ #adds R2
+  geom_smooth(data= waterusage_total_1998 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "lightgrey"))+
+  stat_regline_equation(data= waterusage_total_1998 %>% filter(permit == "total_annual_avg"), label.x= 1998, label.y= 39000000, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= waterusage_total_1998 %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=1998, label.y=37000000, color = "black", size = 3)+ #adds R2
   
-   scale_x_continuous(limits = c(1996, 2035), breaks = seq(1996, 2035, 2))+
+   scale_x_continuous(limits = c(1998, 2035), breaks = seq(1998, 2035, 2))+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -205,19 +222,25 @@ ggplot(data = waterusage_total_1996, aes(x = year, y= annual_avg, color = permit
         plot.title = element_text(hjust = .5))+
   scale_y_continuous(labels = label_comma())+
   geom_hline(yintercept = 41000000, color = "black", linetype= "dashed")+
-  annotate("text", x = 2012, y= 43000000, label = "System cap - 41 million gpd")+
+  annotate("text", x = 2015, y= 43000000, label = "System cap - 41 million gpd")+
   labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap2.jpeg")
+#ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap2.jpeg", width = 2187, height = 1350, units = c("px"), dpi = 300)
 ```
 
-![](images/AnneArundelCounty_WaterUsage_SystemCap2.jpeg)
+![](images/AnneArundelCounty_WaterUsage_SystemCap2-04.jpeg)
 
-# **All Permits, 2010-2022 - with annual use total**
+# **Model 3**
 
-Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022.** Water use would exceed cap in 2029.
+## 2010-2022 - Previous permit period
+
+Total water usage (solid black line) compared to system cap (dotted black line). The gray line is the linear projection of water use growth over time, based on data from the last permit periods **from 2010 - 2022.**
+
+-   Water use would exceed system cap on Wednesday October 25, 2028
+
+-   Projected water use in 2035 is 45,221,247 GPD
 
 ```{r, include=FALSE}
 
