@@ -1,5 +1,5 @@
 ---
-title: "AnneArundel"
+title: "Anne Arundel County - Water Usage"
 author: "Nicole Williamson"
 output:
   html_document:
