@@ -1,7 +1,6 @@
 ---
 title: "AnneArundel"
 author: "Nicole Williamson"
-date: "2023-01-23"
 output:
   html_document:
     toc: yes
@@ -14,6 +13,8 @@ editor_options:
   markdown: 
     wrap: 72
 ---
+
+Last updated: `r Sys.Date()`
 
 ```{r setup, include=FALSE, message=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
