@@ -88,7 +88,49 @@ ggplot(data = waterusage_total, aes(x = year, y= annual_avg, color = permit))+
   labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
-ggsave("../Figures/WashingtonCounty_WaterUsage.jpeg")
+#ggsave("../Figures/WashingtonCounty_WaterUsage.jpeg")
 ```
 
 ![](images/WashingtonCounty_WaterUsage.jpeg)
+
+```{r}
+
+WaterUse_2011 <- waterusage_total %>% filter(year >2010)
+
+
+
+ggplot(data = WaterUse_2011, aes(x = year, y= annual_avg, color = permit))+
+  scale_color_manual(values = c("WA1975G101" = "#e81e63",
+                                "WA1994G003" = "#2196f3",
+                                "WA2011G001" = "#8bc34a", 
+                                "total_annual_avg" = "#ff9800"))+
+  geom_line(size = 1)+
+  geom_smooth(data= WaterUse_2011 %>% filter(permit == "total_annual_avg"), method = "lm", se = FALSE, fullrange = TRUE, linetype = "solid", aes(color = "black"))+
+  stat_regline_equation(data= WaterUse_2011 %>% filter(permit == "total_annual_avg"), label.x= 2012, label.y= 65000, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= WaterUse_2011 %>% filter(permit == "total_annual_avg"), aes(label=..rr.label..), label.x=2012, label.y=68000, color = "black", size = 3)+ #adds R2 
+  scale_x_continuous(limits = c(2011, 2035), breaks = seq(2011, 2035, 2))+
+  theme_light()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.line = element_line(colour = "black", linetype = "solid"), 
+        legend.position="none",
+        plot.title = element_text(hjust = .5))+
+  geom_hline(yintercept = 70000, color = "#e81e63", linetype= "dashed")+
+  annotate("text", x = 2030, y= 68000, color = "#e81e63", label = "WA1975G101 - 70,000 gpd")+
+  geom_hline(yintercept = 5000, color = "#2196f3", linetype= "dashed")+
+  annotate("text", x = 2030, y= 3000, color ="#2196f3", label = "WA1994G003 - 5,000 gpd")+
+  geom_hline(yintercept = 10000, color = "#8bc34a", linetype= "dashed")+
+  annotate("text", x = 2030, y= 8000, color ="#8bc34a", label = "WA2011G001 - 10,000 gpd")+
+  geom_hline(yintercept = 30251.1815, color = "gray", linetype= "dashed")+
+  annotate("text", x = 2030, y= 29000, color ="gray", label = "Combined predicted use - 30251 gpd")+
+  scale_y_continuous(labels = label_comma())+
+  labs(y = "Annual Average Water Ussage (gpd)", x = "Year")+
+  guides(color=guide_legend(" "))+
+  theme(legend.position="bottom")
+
+#ggsave("../Figures/WashingtonCounty_WaterUsage_2011_2023.jpeg")
+```
+
+![](images/WashingtonCounty_WaterUsage_2011_2023.jpeg)
