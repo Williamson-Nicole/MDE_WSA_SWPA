@@ -47,14 +47,14 @@ str(WaterLevel)
 unique(WaterLevel$datum)
 ```
 
-
+Graph of water level over time, **trend line uses data only from 2017 and on**, 95% confidence interval 
 ```{r}
 ggplot(data = WaterLevel, aes(x = date, y= WL_above_MSL))+
   geom_point(size = 1, color = "#3f51b5")+
   geom_smooth(data= WaterLevel %>% filter(date > '2017-01-01'), method = "lm", se = TRUE, fullrange = TRUE, linetype = "solid", color = "black")+
   stat_regline_equation(data = WaterLevel %>% filter(date > '2017-01-01'), label.x= as.Date(c("2030-01-01")), label.y= -110, color = "black", size = 3)+ #adds regression line formual 
   stat_cor(data= WaterLevel %>% filter(date > '2017-01-01'), aes(label=..rr.label..), label.x=as.Date(c("2030-01-01")), label.y= -113, color = "black", size = 3)+ #adds R2 
-   scale_x_date(limits = as.Date(c("1988-01-01", "2045-01-01")), date_breaks = "5 year", date_labels = "%Y")+
+   scale_x_date(limits = as.Date(c("1988-01-01", "2045-01-01")), date_breaks = "2 year", date_labels = "%Y")+
   theme_light()+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -70,7 +70,7 @@ ggplot(data = WaterLevel, aes(x = date, y= WL_above_MSL))+
   guides(color=guide_legend(" "))+
   theme(legend.position="bottom")
 
-ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap1.jpeg")
+ggsave("../Figures/USGS_383633077083001_CH_Bc_24.png")
 
 ```
 
