@@ -1,0 +1,94 @@
+---
+title: "USGS_383633077083001_CH_Bc_24"
+author: "Nicole Williamson"
+date: "2023-03-02"
+output: html_document
+---
+
+```{r,include=FALSE, message=FALSE, message=FALSE, warning=FALSE}
+rm(list = ls()) 
+```
+
+```{r setup, include=FALSE, message=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+#Install/load packages
+library("tidyr")
+library("dplyr")
+library("readr")
+library("ggplot2")
+library("scales")
+library("ggpubr")
+library("ggpmisc")
+```
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+# Note to self!!! To change sigfigs in ggplot stat_regline_equations you need to edit the function in the package 
+
+# type :  "trace(ggpubr:::.stat_lm, edit = TRUE)" into the CONSOLE and edit line 13-14 to be whatever sig fig number you want
+```
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+# Code for joining data sets (could use left or right join instead) 
+MyMerge       <- function(x, y){
+  df            <- merge(x, y, all = TRUE)
+  rownames(df)  <- df$Row.names
+  df$Row.names  <- NULL
+  return(df)
+}
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# read in water usage data
+WaterLevel <- read.csv("../Data/USGS_383633077083001_CH_Bc_24.csv") %>% filter(datum == "NAVD88") %>% mutate(date = as.Date(date)) %>% filter(date> '1956-01-01')
+str(WaterLevel)
+unique(WaterLevel$datum)
+```
+
+
+```{r}
+ggplot(data = WaterLevel, aes(x = date, y= WL_above_MSL))+
+  geom_point(size = 1, color = "#3f51b5")+
+  geom_smooth(data= WaterLevel %>% filter(date > '2017-01-01'), method = "lm", se = TRUE, fullrange = TRUE, linetype = "solid", color = "black")+
+  stat_regline_equation(data = WaterLevel %>% filter(date > '2017-01-01'), label.x= as.Date(c("2030-01-01")), label.y= -110, color = "black", size = 3)+ #adds regression line formual 
+  stat_cor(data= WaterLevel %>% filter(date > '2017-01-01'), aes(label=..rr.label..), label.x=as.Date(c("2030-01-01")), label.y= -113, color = "black", size = 3)+ #adds R2 
+   scale_x_date(limits = as.Date(c("1988-01-01", "2045-01-01")), date_breaks = "5 year", date_labels = "%Y")+
+  theme_light()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.line = element_line(colour = "black", linetype = "solid"), 
+        legend.position="none",
+        plot.title = element_text(hjust = .5))+
+  scale_y_continuous(limits = c(-140, -65), breaks = seq(-140, -65, 5))+
+  geom_hline(yintercept = -128, color = "black", linetype= "dashed")+
+  annotate("text", x =as.Date(c("1996-06-01")), y= -130, label = "80% management level (-128 ft)")+
+  labs(y = "Ground water level above NGVD88 (feet)", x = "")+
+  guides(color=guide_legend(" "))+
+  theme(legend.position="bottom")
+
+ggsave("../Figures/AnneArundelCounty_WaterUsage_SystemCap1.jpeg")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
